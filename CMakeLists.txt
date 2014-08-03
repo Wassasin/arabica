@@ -8,6 +8,7 @@ cmake_minimum_required (VERSION 2.8)
 project(arabica)
 
 set(LIBNAME arabica)
+set(SHAREDLIBNAME ${LIBNAME}-shared)
 
 #
 # Enable/Disable example build
@@ -387,8 +388,23 @@ add_library (${LIBNAME} STATIC
   ${SOURCE_FILES}
 )
 
+add_library (${SHAREDLIBNAME} SHARED
+  ${ARABICA_CONFIG_FILE}
+  ${GENERATED_HEADER_FILES}
+  ${PUBLIC_HEADER_FILES}
+  ${SOURCE_FILES}
+)
+
+set_target_properties(${SHAREDLIBNAME} PROPERTIES OUTPUT_NAME ${LIBNAME})
+
 
 set_property(TARGET ${LIBNAME}
+  APPEND
+  PROPERTY COMPILE_DEFINITIONS
+  ARABICA_NOT_USE_PRAGMA_LINKER_OPTIONS
+  )
+
+set_property(TARGET ${SHAREDLIBNAME}
   APPEND
   PROPERTY COMPILE_DEFINITIONS
   ARABICA_NOT_USE_PRAGMA_LINKER_OPTIONS
@@ -434,6 +450,10 @@ if(MSVC)
   target_link_libraries(${LIBNAME}
     ws2_32.lib
     )
+  
+  target_link_libraries(${SHAREDLIBNAME}
+    ws2_32.lib
+    )
 endif()
 
 # link chosen backend
@@ -441,6 +461,9 @@ target_link_libraries(${LIBNAME}
   ${ADDITIONAL_LIB}
 )
 
+target_link_libraries(${SHAREDLIBNAME}
+  ${ADDITIONAL_LIB}
+)
 
 #
 # Add build dependency to boost if boost is part of the same project
@@ -587,5 +610,8 @@ if(BUILD_ARABICA_EXAMPLES)
   set_target_properties(${EXAMPLE_NAME} PROPERTIES FOLDER "3rdparty/arabica_examples")
 
 endif()
+
+install(TARGETS ${LIBNAME} ${SHAREDLIBNAME} DESTINATION lib)
+install(DIRECTORY include/ DESTINATION include/arabica FILES_MATCHING PATTERN "*.hpp")
 
 
